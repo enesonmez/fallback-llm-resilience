@@ -1,0 +1,65 @@
+### Değişken Tanımlama
+@hostname = localhost
+@port = 5125
+@baseUrl = http://{{hostname}}:{{port}}
+
+### 1. Başarılı Senaryo (Happy Path)
+# Tüm alanlar dolu ve geçerli. 
+# AI'dan ürün açıklaması oluşturmasını bekliyoruz.
+POST {{baseUrl}}/api/products/generate-description
+Content-Type: application/json
+
+{
+  "productName": "Kablosuz Oyuncu Kulaklığı X-100",
+  "features": [
+    { "name": "Bağlantı", "value": "Bluetooth 5.3" },
+    { "name": "Pil Ömrü", "value": "40 Saat" },
+    { "name": "Gürültü Engelleme", "value": "Aktif (ANC)" }
+  ],
+  "tone": "Heyecan Verici"
+}
+
+###
+
+### 2. Validasyon Hatası: Ürün Adı Eksik
+# ProductName boş olduğu için 400 Bad Request ve hata mesajı dönmeli.
+POST {{baseUrl}}/api/products/generate-description
+Content-Type: application/json
+
+{
+  "productName": "",
+  "features": [
+    { "name": "Renk", "value": "Siyah" }
+  ],
+  "tone": "Professional"
+}
+
+###
+
+### 3. Validasyon Hatası: Özellik Listesi Boş
+# Features listesi boş olduğu için 'En az bir ürün özelliği belirtilmelidir' hatası dönmeli.
+POST {{baseUrl}}/api/products/generate-description
+Content-Type: application/json
+
+{
+  "productName": "Akıllı Saat",
+  "features": [],
+  "tone": "Minimalist"
+}
+
+###
+
+### 4. Validasyon Hatası: Liste İçindeki Nesne Hatalı (Nested Validation)
+# Features içindeki bir elemanın 'name' veya 'value' değeri boş.
+# ProductFeatureValidator devreye girmeli.
+POST {{baseUrl}}/api/products/generate-description
+Content-Type: application/json
+
+{
+  "productName": "Kahve Makinesi",
+  "features": [
+    { "name": "", "value": "15 Bar Basınç" },
+    { "name": "Garanti", "value": "" }
+  ],
+  "tone": "Professional"
+}
