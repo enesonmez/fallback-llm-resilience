@@ -1,0 +1,41 @@
+﻿services:
+  api:
+    build:
+      context: ./FallbackLLMResilience.API
+      dockerfile: Dockerfile
+    container_name: fallback_api
+    ports:
+      - "5125:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OpenAiSettings__ApiKey=YOUR_OPENAI_API_KEY
+      - OpenAiSettings__Model=gpt-4o
+      - OllamaSettings__Uri=http://ollama:11434
+      - OllamaSettings__Model=qwen2.5:3b
+    depends_on:
+      ollama-ready:
+        condition: service_completed_successfully
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama_service
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+
+  # Modelin otomatik çekilmesini sağlayan yardımcı servis
+  ollama-ready:
+    image: ollama/ollama:latest
+    container_name: ollama_model_puller
+    volumes:
+      - ollama_data:/root/.ollama
+    entrypoint: /bin/sh
+    command:
+      - "-c"
+      - "sleep 5; ollama serve & sleep 5; ollama pull qwen2.5:3b"
+    depends_on:
+      - ollama
+
+volumes:
+  ollama_data:
